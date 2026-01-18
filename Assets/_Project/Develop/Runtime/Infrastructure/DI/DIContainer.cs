@@ -7,11 +7,33 @@ namespace _Project.Develop.Runtime.Infrastructure.DI
     {
         private readonly Dictionary<Type, Registration> _container = new Dictionary<Type, Registration>();
         private readonly List<Type> _requests = new List<Type>();
+        private readonly DIContainer _parent;
+
+        public DIContainer(DIContainer parent)
+        {
+            _parent = parent;
+        }
+
+        public DIContainer() : this(null) {}
 
         public void RegisterAsSingle<T>(Func<DIContainer, T> creator)
         {
+            if(IsAlreadyRegistered<T>())
+                throw new InvalidOperationException($"Duplicate registration of type {typeof(T)}");
+
             Registration registration = new Registration(container => creator.Invoke(container));
             _container.Add(typeof(T), registration);
+        }
+
+        public bool IsAlreadyRegistered<T>()
+        {
+            if(_container.ContainsKey(typeof(T)))
+                return true;
+
+            if(_parent != null)
+                return _parent.IsAlreadyRegistered<T>();
+
+            return false;
         }
 
         public T Resolve<T>()
@@ -25,6 +47,9 @@ namespace _Project.Develop.Runtime.Infrastructure.DI
             {
                 if (_container.TryGetValue(typeof(T), out Registration registration))
                     return (T)registration.CreateInstanceFrom(this);
+
+                if(_parent != null)
+                    return _parent.Resolve<T>();
             }
             finally
             {

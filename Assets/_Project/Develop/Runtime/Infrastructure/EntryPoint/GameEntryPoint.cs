@@ -12,10 +12,10 @@ namespace _Project.Develop.Runtime.Infrastructure.EntryPoint
     {
         private void Awake()
         {
-            DIContainer container = new DIContainer();
-            EntryPointRegistrations.Process(container);
+            DIContainer projectContainer = new DIContainer();
+            ProjectContextRegistrations.Process(projectContainer);
 
-            container.Resolve<ICoroutinesPerformer>().StartPerform(Initialize(container));
+            projectContainer.Resolve<ICoroutinesPerformer>().StartPerform(Initialize(projectContainer));
         }
 
         private IEnumerator Initialize(DIContainer container)

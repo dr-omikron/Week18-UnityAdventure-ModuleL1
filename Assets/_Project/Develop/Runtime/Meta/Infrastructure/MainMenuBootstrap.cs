@@ -1,17 +1,28 @@
 ﻿using System;
 using System.Collections;
 using _Project.Develop.Runtime.Infrastructure;
+using _Project.Develop.Runtime.Infrastructure.DI;
+using _Project.Develop.Runtime.Utilities.SceneManagement;
 
 namespace _Project.Develop.Runtime.Meta.Infrastructure
 {
     public class MainMenuBootstrap : SceneBootstrap
     {
-        public override IEnumerator Initialize() => throw new System.NotImplementedException();
-        public override void Run() => throw new System.NotImplementedException();
-
-        public void Update()
+        private DIContainer _container;
+        public override void ProcessRegistration(DIContainer container, IInputSceneArgs sceneArgs = null)
         {
-            throw new NotImplementedException();
+            _container = container;
+            MainMenuContextRegistrations.Process(_container);
+        }
+
+        public override IEnumerator Initialize()
+        {
+            yield return null;
+        }
+
+        public override void Run()
+        {
+            
         }
     }
 }
