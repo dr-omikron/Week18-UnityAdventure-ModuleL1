@@ -2,11 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
-using UnityEngine;
 
 namespace _Project.Develop.Runtime.Utilities.ConfigsManagement
 {
-    public class ConfigsProviderService : MonoBehaviour
+    public class ConfigsProviderService
     {
         private readonly Dictionary<Type, object> _configs = new Dictionary<Type, object>();
         private readonly IConfigsLoader[] _loaders;
