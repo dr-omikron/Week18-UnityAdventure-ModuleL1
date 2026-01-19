@@ -1,4 +1,4 @@
-﻿namespace _Project.Develop.Runtime.Types
+﻿namespace _Project.Develop.Runtime.EnumTypes
 {
     public enum GameplayMode
     {
