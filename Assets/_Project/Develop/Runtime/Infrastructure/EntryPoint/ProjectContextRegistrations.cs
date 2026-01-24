@@ -3,6 +3,7 @@ using _Project.Develop.Runtime.Utilities.AssetsManagement;
 using _Project.Develop.Runtime.Utilities.ConfigsManagement;
 using _Project.Develop.Runtime.Utilities.CoroutinesManagement;
 using _Project.Develop.Runtime.Utilities.LoadScreen;
+using _Project.Develop.Runtime.Utilities.ObjectsLifetimeManagement;
 using _Project.Develop.Runtime.Utilities.SceneManagement;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ namespace _Project.Develop.Runtime.Infrastructure.EntryPoint
             container.RegisterAsSingle(CreateSceneLoaderService);
             container.RegisterAsSingle<ILoadingScreen>(CreateLoadingScreen);
             container.RegisterAsSingle(CreateSceneSwitcherService);
+            container.RegisterAsSingle(CreateObjectsUpdater);
         }
 
         private static CoroutinesPerformer CreateCoroutinesPerformer(DIContainer c)
@@ -56,5 +58,7 @@ namespace _Project.Develop.Runtime.Infrastructure.EntryPoint
 
             return Object.Instantiate(standardLoadingScreenPrefab);
         }
+
+        private static ObjectsUpdater CreateObjectsUpdater(DIContainer c) => new ObjectsUpdater();
     }
 }

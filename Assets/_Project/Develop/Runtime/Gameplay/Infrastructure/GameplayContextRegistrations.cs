@@ -10,13 +10,11 @@ namespace _Project.Develop.Runtime.Gameplay.Infrastructure
     {
         public static void Process(DIContainer container, GameplayInputArgs gameplayInputArgs)
         {
-            container.RegisterAsSingle(CreateObjectsUpdater);
             container.RegisterAsSingle(CreateGameplayPlayerInputs);
             container.RegisterAsSingle(CreateSymbolsSequenceGenerator);
             container.RegisterAsSingle(CreateInputStringReader);
         }
 
-        private static ObjectsUpdater CreateObjectsUpdater(DIContainer c) => new ObjectsUpdater();
         private static GameplayPlayerInputs CreateGameplayPlayerInputs(DIContainer c) => new GameplayPlayerInputs();
         private static SymbolsSequenceGenerator CreateSymbolsSequenceGenerator(DIContainer c) => new SymbolsSequenceGenerator();
         private static InputStringReader CreateInputStringReader(DIContainer c)

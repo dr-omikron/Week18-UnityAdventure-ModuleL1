@@ -9,7 +9,7 @@ namespace _Project.Develop.Runtime.Gameplay.Inputs
     {
         public event Action EndGameKeyDown;
 
-        public void Update()
+        public void Update(float deltaTime)
         {
             if (Input.GetKeyDown(KeyboardInputKeys.EndGameKey))
                 EndGameKeyDown?.Invoke();

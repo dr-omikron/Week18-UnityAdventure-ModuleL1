@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using _Project.Develop.Runtime.Gameplay.Inputs;
 using _Project.Develop.Runtime.Gameplay.Services;
 using _Project.Develop.Runtime.Utilities.CoroutinesManagement;
+using _Project.Develop.Runtime.Utilities.Factories;
 using _Project.Develop.Runtime.Utilities.PlayerInput;
 using _Project.Develop.Runtime.Utilities.SceneManagement;
 using UnityEngine;
@@ -12,41 +13,37 @@ namespace _Project.Develop.Runtime.Gameplay.Infrastructure
 {
     public class GameCycle : IDisposable
     {
-        private readonly SymbolsSequenceGenerator _symbolsSequenceGenerator;
-        private readonly InputStringReader _inputStringReader;
+        private readonly GameplayServicesFactory _gameplayServicesFactory;
         private readonly GameplayPlayerInputs _gameplayPlayerInputs;
         private readonly ICoroutinesPerformer _coroutinesPerformer;
         private readonly SceneSwitcherService _sceneSwitcherService;
-        private readonly List<char> _symbols;
-        private readonly int _sequenceLength;
+        private readonly GameplayInputArgs _inputArgs;
 
         public GameCycle(
-            SymbolsSequenceGenerator symbolsSequenceGenerator, 
-            InputStringReader inputStringReader, 
+            GameplayServicesFactory gameplayServicesFactory, 
             GameplayPlayerInputs gameplayPlayerInputs, 
-            ICoroutinesPerformer coroutinesPerformer, 
-            SceneSwitcherService sceneSwitcherService, 
-            List<char> symbols, 
-            int sequenceLength)
+            ICoroutinesPerformer coroutinesPerformer,
+            SceneSwitcherService sceneSwitcherService,
+            GameplayInputArgs inputArgs)
         {
-            _symbolsSequenceGenerator = symbolsSequenceGenerator;
-            _inputStringReader = inputStringReader;
+            _gameplayServicesFactory = gameplayServicesFactory;
             _gameplayPlayerInputs = gameplayPlayerInputs;
             _coroutinesPerformer = coroutinesPerformer;
             _sceneSwitcherService = sceneSwitcherService;
-            _symbols = new List<char>(symbols);
-            _sequenceLength = sequenceLength;
+            _inputArgs = inputArgs;
         }
 
         public IEnumerator Start()
         {
-            string generated = _symbolsSequenceGenerator.Generate(_symbols, _sequenceLength);
+            SymbolsSequenceGenerator symbolsSequenceGenerator = _gameplayServicesFactory.GetSymbolsSequenceGenerator();
+            string generated = symbolsSequenceGenerator.Generate(_inputArgs.Symbols, _inputArgs.SequenceLenght);
 
             Debug.Log($"Retry symbols sequence - { generated }");
 
-            yield return _coroutinesPerformer.StartPerform(_inputStringReader.StartProcess(_sequenceLength));
+            InputStringReader inputStringReader = _gameplayServicesFactory.GetInputStringReader();
+            yield return _coroutinesPerformer.StartPerform(inputStringReader.StartProcess(_inputArgs.SequenceLenght));
 
-            if (string.Equals(_inputStringReader.CurrentInput, generated, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(inputStringReader.CurrentInput, generated, StringComparison.OrdinalIgnoreCase))
                 ProcessWin();
             else
                 ProcessDefeat();

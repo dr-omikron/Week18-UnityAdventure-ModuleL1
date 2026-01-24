@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
 using _Project.Develop.Runtime.Gameplay.Inputs;
-using _Project.Develop.Runtime.Gameplay.Services;
 using _Project.Develop.Runtime.Infrastructure;
 using _Project.Develop.Runtime.Infrastructure.DI;
 using _Project.Develop.Runtime.Utilities.CoroutinesManagement;
+using _Project.Develop.Runtime.Utilities.Factories;
 using _Project.Develop.Runtime.Utilities.ObjectsLifetimeManagement;
 using _Project.Develop.Runtime.Utilities.SceneManagement;
 using UnityEngine;
@@ -14,9 +14,9 @@ namespace _Project.Develop.Runtime.Gameplay.Infrastructure
     public class GameplayBootstrap : SceneBootstrap
     {
         private DIContainer _container;
+        private ProjectServicesFactory _projectServicesFactory;
         private GameplayInputArgs _inputArgs;
         private ObjectsUpdater _objectsUpdater;
-        private GameplayPlayerInputs _gameplayPlayerInputs;
         private ICoroutinesPerformer _coroutinesPerformer;
         private GameCycle _gameCycle;
         private bool _isRun;
@@ -35,23 +35,23 @@ namespace _Project.Develop.Runtime.Gameplay.Infrastructure
 
         public override IEnumerator Initialize()
         {
-            _objectsUpdater = _container.Resolve<ObjectsUpdater>();
-            _gameplayPlayerInputs = _container.Resolve<GameplayPlayerInputs>();
-            _objectsUpdater.Add(_gameplayPlayerInputs);
-            _coroutinesPerformer = _container.Resolve<ICoroutinesPerformer>();
+            _projectServicesFactory = new ProjectServicesFactory(_container);
+            GameplayServicesFactory gameplayServicesFactory = new GameplayServicesFactory(_container);
 
-            SymbolsSequenceGenerator symbolsSequenceGenerator = _container.Resolve<SymbolsSequenceGenerator>();
-            InputStringReader inputStringReader = _container.Resolve<InputStringReader>();
-            SceneSwitcherService sceneSwitcherService = _container.Resolve<SceneSwitcherService>();
+            _objectsUpdater = _projectServicesFactory.GetObjectsUpdater();
+            GameplayPlayerInputs gameplayPlayerInputs = gameplayServicesFactory.GetGameplayPlayerInputs();
+
+            _objectsUpdater.Add(gameplayPlayerInputs);
+
+            _coroutinesPerformer = _projectServicesFactory.GetCoroutinesPerformer();
+            SceneSwitcherService sceneSwitcherService = _projectServicesFactory.GetSceneSwitcherService();
 
             _gameCycle = new GameCycle(
-                symbolsSequenceGenerator,
-                inputStringReader,
-                _gameplayPlayerInputs,
+                gameplayServicesFactory,
+                gameplayPlayerInputs,
                 _coroutinesPerformer,
                 sceneSwitcherService,
-                _inputArgs.Symbols,
-                _inputArgs.SequenceLenght);
+                _inputArgs);
 
             yield return null;
         }
@@ -61,7 +61,7 @@ namespace _Project.Develop.Runtime.Gameplay.Infrastructure
             if (_isRun == false)
                 return;
 
-            _objectsUpdater.Update();
+            _objectsUpdater.Update(Time.deltaTime);
         }
 
         private void OnDestroy()

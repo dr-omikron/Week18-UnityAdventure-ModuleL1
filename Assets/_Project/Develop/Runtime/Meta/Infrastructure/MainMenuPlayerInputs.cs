@@ -10,7 +10,7 @@ namespace _Project.Develop.Runtime.Meta.Infrastructure
         public event Action LoadCharactersModeKeyDown;
         public event Action LoadNumbersModeKeyDown;
 
-        public void Update()
+        public void Update(float deltaTime)
         {
             if(Input.GetKeyDown(KeyboardInputKeys.LoadCharactersModeKey))
                 LoadCharactersModeKeyDown?.Invoke();

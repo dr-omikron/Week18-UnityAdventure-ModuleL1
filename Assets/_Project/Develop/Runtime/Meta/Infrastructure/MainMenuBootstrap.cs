@@ -1,12 +1,10 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using _Project.Develop.Runtime.EnumTypes;
-using _Project.Develop.Runtime.Gameplay.Configs;
 using _Project.Develop.Runtime.Gameplay.Infrastructure;
+using _Project.Develop.Runtime.Gameplay.Services;
 using _Project.Develop.Runtime.Infrastructure;
 using _Project.Develop.Runtime.Infrastructure.DI;
-using _Project.Develop.Runtime.Utilities.ConfigsManagement;
 using _Project.Develop.Runtime.Utilities.CoroutinesManagement;
+using _Project.Develop.Runtime.Utilities.Factories;
 using _Project.Develop.Runtime.Utilities.ObjectsLifetimeManagement;
 using _Project.Develop.Runtime.Utilities.SceneManagement;
 using UnityEngine;
@@ -16,8 +14,9 @@ namespace _Project.Develop.Runtime.Meta.Infrastructure
     public class MainMenuBootstrap : SceneBootstrap
     {
         private DIContainer _container;
+        private ProjectServicesFactory _projectServicesFactory;
         private ObjectsUpdater _objectsUpdater;
-        private MainMenuPlayerInputs _mainMenuPlayerInputs;
+        private SelectGameModeArgsService _selectGameModeArgsService;
         private bool _isRun;
 
         public override void ProcessRegistration(DIContainer container, IInputSceneArgs sceneArgs = null)
@@ -28,28 +27,18 @@ namespace _Project.Develop.Runtime.Meta.Infrastructure
 
         public override IEnumerator Initialize()
         {
-            _objectsUpdater = _container.Resolve<ObjectsUpdater>();
-            _mainMenuPlayerInputs = _container.Resolve<MainMenuPlayerInputs>();
-            _objectsUpdater.Add(_mainMenuPlayerInputs);
+            _projectServicesFactory = new ProjectServicesFactory(_container);
+            MainMenuServicesFactory mainMenuServicesFactory = new MainMenuServicesFactory(_container);
 
-            _mainMenuPlayerInputs.LoadNumbersModeKeyDown += OnLoadNumbersMode;
-            _mainMenuPlayerInputs.LoadCharactersModeKeyDown += OnLoadCharacterMode;
+            _objectsUpdater = _projectServicesFactory.GetObjectsUpdater();
+            MainMenuPlayerInputs mainMenuPlayerInputs = mainMenuServicesFactory.GetMainMenuPlayerInputs();
+            _selectGameModeArgsService = mainMenuServicesFactory.GetSelectGameModeArgsService();
+
+            _selectGameModeArgsService.GameModeSelected += OnSelectedGameModeArgs;
+
+            _objectsUpdater.Add(mainMenuPlayerInputs);
 
             yield return null;
-        }
-
-        private void Update()
-        {
-            if (_isRun == false)
-                return;
-
-            _objectsUpdater.Update();
-        }
-
-        private void OnDestroy()
-        {
-            _mainMenuPlayerInputs.LoadNumbersModeKeyDown -= OnLoadNumbersMode;
-            _mainMenuPlayerInputs.LoadCharactersModeKeyDown -= OnLoadCharacterMode;
         }
 
         public override void Run()
@@ -58,32 +47,25 @@ namespace _Project.Develop.Runtime.Meta.Infrastructure
             Debug.Log("Выбрать режим игры: 1 - сгенерировать цифры, 2 - сгенерировать буквы");
         }
 
-        private void OnLoadCharacterMode()
+        private void Update()
         {
-            LevelConfig config = GetLevelConfig();
-            List<char> characters = config.SymbolsConfig.GetSymbolsBy(GameplayMode.Characters);
-            SwitchSceneTo(Scenes.Gameplay, new GameplayInputArgs(characters, config.SequenceLenght));
+            if (_isRun == false)
+                return;
+
+            _objectsUpdater.Update(Time.deltaTime);
         }
 
-        private void OnLoadNumbersMode()
+        private void OnDestroy()
         {
-            LevelConfig config = GetLevelConfig();
-            List<char> characters = config.SymbolsConfig.GetSymbolsBy(GameplayMode.Numbers);
-            SwitchSceneTo(Scenes.Gameplay, new GameplayInputArgs(characters, config.SequenceLenght));
+            _selectGameModeArgsService.GameModeSelected -= OnSelectedGameModeArgs;
+            _selectGameModeArgsService.Dispose();
         }
 
-        private LevelConfig GetLevelConfig()
+        private void OnSelectedGameModeArgs(GameplayInputArgs args)
         {
-            ConfigsProviderService configsProviderService = _container.Resolve<ConfigsProviderService>();
-            return configsProviderService.GetConfig<LevelConfig>();
+            SceneSwitcherService sceneSwitcherService = _projectServicesFactory.GetSceneSwitcherService();
+            ICoroutinesPerformer coroutinesPerformer = _projectServicesFactory.GetCoroutinesPerformer();
+            coroutinesPerformer.StartPerform(sceneSwitcherService.ProcessSwitchTo(Scenes.Gameplay, args));
         }
-
-        private void SwitchSceneTo(string sceneName, GameplayInputArgs args)
-        {
-            SceneSwitcherService sceneSwitcherService = _container.Resolve<SceneSwitcherService>();
-            ICoroutinesPerformer coroutinesPerformer = _container.Resolve<ICoroutinesPerformer>();
-            coroutinesPerformer.StartPerform(sceneSwitcherService.ProcessSwitchTo(sceneName, args));
-        }
-
     }
 }

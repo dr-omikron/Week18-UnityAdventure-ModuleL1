@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using _Project.Develop.Runtime.Infrastructure.DI;
-using _Project.Develop.Runtime.Utilities.ConfigsManagement;
 using _Project.Develop.Runtime.Utilities.CoroutinesManagement;
+using _Project.Develop.Runtime.Utilities.Factories;
 using _Project.Develop.Runtime.Utilities.LoadScreen;
 using _Project.Develop.Runtime.Utilities.SceneManagement;
 using UnityEngine;
@@ -20,12 +20,14 @@ namespace _Project.Develop.Runtime.Infrastructure.EntryPoint
 
         private IEnumerator Initialize(DIContainer container)
         {
-            ILoadingScreen loadingScreen = container.Resolve<ILoadingScreen>();
-            SceneSwitcherService sceneSwitcherService = container.Resolve<SceneSwitcherService>();
+            ProjectServicesFactory projectServicesFactory = new ProjectServicesFactory(container);
+
+            ILoadingScreen loadingScreen = projectServicesFactory.GetStandardLoadingScreen();
+            SceneSwitcherService sceneSwitcherService = projectServicesFactory.GetSceneSwitcherService();
 
             loadingScreen.Show();
 
-            yield return container.Resolve<ConfigsProviderService>().LoadAsync();
+            yield return projectServicesFactory.GetConfigsProviderService().LoadAsync();
 
             loadingScreen.Hide();
 

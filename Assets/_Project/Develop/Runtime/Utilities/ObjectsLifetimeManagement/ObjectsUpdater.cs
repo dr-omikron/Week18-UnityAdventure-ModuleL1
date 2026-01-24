@@ -8,10 +8,10 @@ namespace _Project.Develop.Runtime.Utilities.ObjectsLifetimeManagement
 
         public void Add(IUpdatable updatable) => _updatables.Add(updatable);
 
-        public void Update()
+        public void Update(float deltaTime)
         {
             foreach (var updatable in _updatables)
-                updatable.Update();
+                updatable.Update(deltaTime);
         }
     }
 }
